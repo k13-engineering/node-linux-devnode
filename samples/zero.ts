@@ -1,4 +1,4 @@
-import devnode from "../lib/index.js";
+import devnode from "../lib/index.ts";
 
 // /dev/zero is 1:5
 const fh = await devnode.open({
