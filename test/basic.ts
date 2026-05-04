@@ -1,13 +1,10 @@
-/* global describe */
-/* global it */
-
 import devnode, { type TMethod } from "../lib/index.ts";
 import assert from "assert";
 import { describe, it } from "mocha";
 
-const isBufferZero = (buffer: Buffer) => {
+const isBufferZero = (buffer: Uint8Array) => {
   for (let i = 0; i < buffer.length; i += 1) {
-    const value = buffer.readUInt8(i);
+    const value = buffer[i];
     if (value !== 0) {
       return false;
     }
@@ -26,14 +23,14 @@ describe("devnode", () => {
       it("should read from /dev/zero (1:5) correctly", async () => {
         const fh = await devnode.open({
           method,
-          "type": "character",
-          "major": 1,
-          "minor": 5,
-          "flags": "r"
+          type: "character",
+          major: 1,
+          minor: 5,
+          flags: "r"
         });
 
         try {
-          const result = await fh.read(Buffer.alloc(32), 0, 32, 0);
+          const result = await fh.read(new Uint8Array(32), 0, 32, 0);
           assert(isBufferZero(result.buffer));
         } finally {
           await fh.close();

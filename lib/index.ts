@@ -4,7 +4,9 @@ import { createRequire } from "module";
 const require = createRequire(
   import.meta.url);
 
-const opendev = require("../build/Release/opendev.node") as (type: number, major: number, minor: number, flags: number, method: number) => Promise<number>;
+// eslint-disable-next-line max-params
+type TNativeOpendev = (type: number, major: number, minor: number, flags: number, method: number) => Promise<number>;
+const opendev = require("../build/Release/opendev.node") as TNativeOpendev;
 
 const S_IFCHR = 0x2000;
 const S_IFBLK = 0x6000;
@@ -32,6 +34,7 @@ const fileDescriptorToHandle = async ({ fd, flags }: { fd: number; flags: TFlags
     });
   } catch (ex) {
     await fh.close();
+    throw ex;
   }
 
   return fh;
@@ -45,7 +48,7 @@ const methodToNative = ({ method }: { method: TMethod }): number => {
   } else if (method === "METHOD_MOUNT_NAMESPACE_TMPFS") {
     return 2;
   } else {
-    throw new Error(`unsupported method "${method}"`);
+    throw Error(`unsupported method "${method}"`);
   }
 };
 
@@ -55,7 +58,7 @@ const typeToNative = ({ type }: { type: TDeviceType }): number => {
   } else if (type === "block") {
     return S_IFBLK;
   } else {
-    throw new Error(`unsupported type "${type}"`);
+    throw Error(`unsupported type "${type}"`);
   }
 };
 
@@ -67,11 +70,23 @@ const flagsToNative = ({ flags }: { flags: TFlags }): number => {
   } else if (flags === "r+") {
     return O_RDWR;
   } else {
-    throw new Error(`invalid flags "${flags}", only "r", "w" and "r+" supported`);
+    throw Error(`invalid flags "${flags}", only "r", "w" and "r+" supported`);
   }
 };
 
-const open = async ({ method = "METHOD_AUTO", type, major, minor, flags }: { method?: TMethod; type: TDeviceType; major: number; minor: number; flags: TFlags }): Promise<fs.promises.FileHandle> => {
+const open = async ({
+  method = "METHOD_AUTO",
+  type,
+  major,
+  minor,
+  flags
+}: {
+  method?: TMethod;
+  type: TDeviceType;
+  major: number;
+  minor: number;
+  flags: TFlags
+}): Promise<fs.promises.FileHandle> => {
   const methodNative = methodToNative({ method });
   const typeNative = typeToNative({ type });
   const flagsNative = flagsToNative({ flags });
@@ -81,6 +96,7 @@ const open = async ({ method = "METHOD_AUTO", type, major, minor, flags }: { met
   return await fileDescriptorToHandle({ fd, flags });
 };
 
+// eslint-disable-next-line k13-engineering/no-default-export
 export default {
   open
 };

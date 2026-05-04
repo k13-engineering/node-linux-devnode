@@ -1,0 +1,29 @@
+{
+  "name": "linux-devnode",
+  "type": "module",
+  "description": "Linux device node library for Node.js",
+  "publishConfig": {
+    "access": "public"
+  },
+  "files": [
+    "dist"
+  ],
+  "main": "dist/lib/index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/k13-engineering/node-linux-devnode.git"
+  },
+  "keywords": [
+    "node",
+    "mknod",
+    "device",
+    "linux"
+  ],
+  "author": "Simon Kadisch",
+  "license": "LGPL 2.1",
+  "bugs": {
+    "url": "https://github.com/k13-engineering/node-linux-devnode/issues"
+  },
+  "homepage": "https://github.com/k13-engineering/node-linux-devnode#readme"
+}
