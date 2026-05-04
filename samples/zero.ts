@@ -1,14 +1,19 @@
-import devnode from "../lib/index.ts";
+import { openCharacterDevice } from "../lib/index.ts";
+import nodeFs from "node:fs";
 
-// /dev/zero is 1:5
-const fh = await devnode.open({
-  type: "character",
+const { error: openError, fd } = openCharacterDevice({
   major: 1,
   minor: 5,
-  flags: "r"
+  flags: 0n
 });
 
-const zero = await fh.read(new Uint8Array(32), 0, 32, 0);
+if (openError !== undefined) {
+  throw Error("failed to open /dev/zero character device", { cause: openError });
+}
+
+const buffer = new Uint8Array(32);
+const bytesRead = nodeFs.readSync(fd, buffer, 0, buffer.length, 0);
+const zero = buffer.slice(0, bytesRead);
 console.log("zero =", zero);
 
-await fh.close();
+nodeFs.closeSync(fd);

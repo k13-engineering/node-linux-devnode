@@ -3,32 +3,46 @@ Linux device node library for Node.js
 
 ## API
 
-### `devnode.open(options)` => Promise(`FileHandle`)
+### `openCharacterDevice(options)` => `{ error, fd }`
 
-Opens a device node as Node.js `FileHandle`.
+Opens a character device node and returns a file descriptor.
 
-- `options.type` type of device node, either `"character"` or `"block"`
 - `options.major` major number of device node
 - `options.minor` minor number of device node
-- `options.flags` open flags, either `"r"`, `"w"` or `"r+"`, see Node.js fs.open() documentation
+- `options.flags` open flags as `bigint`
 
-For a description of the `FileHandle` API, visit [Node.js's documentation](https://nodejs.org/api/fs.html#fs_class_filehandle)
+Returns `{ error: undefined, fd: number }` on success, or `{ error: Error, fd: undefined }` on failure.
+
+### `openBlockDevice(options)` => `{ error, fd }`
+
+Opens a block device node and returns a file descriptor.
+
+- `options.major` major number of device node
+- `options.minor` minor number of device node
+- `options.flags` open flags as `bigint`
+
+Returns `{ error: undefined, fd: number }` on success, or `{ error: Error, fd: undefined }` on failure.
 
 ## Minimal example
 
-```javascript
-import devnode from "linux-devnode";
+```typescript
+import { openCharacterDevice } from "linux-devnode";
+import nodeFs from "node:fs";
 
-// /dev/zero is 1:5
-const fh = await devnode.open({
-  "type": "character",
-  "major": 1,
-  "minor": 5,
-  "flags": "r"
+const { error: openError, fd } = openCharacterDevice({
+  major: 1,
+  minor: 5,
+  flags: 0n
 });
 
-const zero = await fh.read(Buffer.alloc(32), 0, 32, 0);
+if (openError !== undefined) {
+  throw Error("failed to open /dev/zero character device", { cause: openError });
+}
+
+const buffer = new Uint8Array(32);
+const bytesRead = nodeFs.readSync(fd, buffer, 0, buffer.length, 0);
+const zero = buffer.slice(0, bytesRead);
 console.log("zero =", zero);
 
-await fh.close();
+nodeFs.closeSync(fd);
 ```
