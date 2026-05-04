@@ -95,7 +95,7 @@ const createDeviceNodeOpenerViaFsmount = ({
     flags
   }) => {
     return mknodAndOpen({
-      mode: S_IFCHR,
+      mode: S_IFCHR | 0o666n,
       openFlags: flags,
       dev: makedev({ major, minor })
     });
@@ -107,7 +107,7 @@ const createDeviceNodeOpenerViaFsmount = ({
     flags
   }) => {
     return mknodAndOpen({
-      mode: S_IFBLK,
+      mode: S_IFBLK | 0o666n,
       openFlags: flags,
       dev: makedev({ major, minor })
     });
