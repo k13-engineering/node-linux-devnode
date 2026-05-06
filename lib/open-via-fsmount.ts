@@ -1,14 +1,6 @@
+import { makedev } from "./dev-util.ts";
 import type { TLinuxInterface } from "./linux-interface.ts";
 import type { TDeviceNodeOpener } from "./open-interface.ts";
-
-const makedev = ({ major, minor }: { major: number, minor: number }): bigint => {
-  const maj = BigInt(major);
-  const min = BigInt(minor);
-  return ((maj & 0xfffff000n) << 32n) |
-         ((maj & 0x00000fffn) << 8n) |
-         ((min & 0xffffff00n) << 12n) |
-         (min & 0x000000ffn);
-};
 
 const S_IFCHR = 0x2000n;
 const S_IFBLK = 0x6000n;

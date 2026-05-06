@@ -1,5 +1,6 @@
 import nodeFs from "node:fs";
 import type { TDeviceNodeOpener } from "./open-interface.ts";
+import { devToMajorMinor } from "./dev-util.ts";
 
 const createDevFolderDeviceNodeOpener = ({
   fs,
@@ -49,13 +50,13 @@ const createDevFolderDeviceNodeOpener = ({
       return entry.isCharacterDevice();
     });
 
+
     const matchingEntry = deviceNodeEntries.find((entry) => {
       const st = fs.statSync(`${deviceFolderPath}/${entry.name}`);
 
-      const entryMajor = (st.rdev >> 8) & 0xff;
-      const entryMinor = st.rdev & 0xff;
+      const deviceAddress = devToMajorMinor({ dev: BigInt(st.rdev) });
 
-      return entryMajor === major && entryMinor === minor;
+      return deviceAddress.major === major && deviceAddress.minor === minor;
     });
 
     if (matchingEntry === undefined) {
@@ -87,10 +88,9 @@ const createDevFolderDeviceNodeOpener = ({
     const matchingEntry = deviceNodeEntries.find((entry) => {
       const st = fs.statSync(`${deviceFolderPath}/${entry.name}`);
 
-      const entryMajor = (st.rdev >> 8) & 0xff;
-      const entryMinor = st.rdev & 0xff;
+      const deviceAddress = devToMajorMinor({ dev: BigInt(st.rdev) });
 
-      return entryMajor === major && entryMinor === minor;
+      return deviceAddress.major === major && deviceAddress.minor === minor;
     });
 
     if (matchingEntry === undefined) {
