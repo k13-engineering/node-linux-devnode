@@ -74,7 +74,119 @@ const openBlockDevice = ({
   });
 };
 
+type TDetermineDeviceAddressFromSysfsDevPathResult = {
+  error: Error;
+  deviceAddress: undefined;
+} | {
+  error: undefined;
+  deviceAddress: {
+    major: number;
+    minor: number;
+  };
+};
+
+const determineMajorAndMinorFromSysfsDevPath = ({
+  sysfsDevPath
+}: {
+  sysfsDevPath: string;
+// eslint-disable-next-line complexity
+}): TDetermineDeviceAddressFromSysfsDevPathResult => {
+  let content: string;
+  try {
+    content = nodeFs.readFileSync(sysfsDevPath, "utf-8");
+  } catch (ex) {
+    return {
+      error: ex as Error,
+      deviceAddress: undefined
+    };
+  }
+
+  const parts = content.trim().split(":");
+  if (parts.length !== 2) {
+    return {
+      error: Error(`unexpected format of content "${content}" in sysfs dev path "${sysfsDevPath}"`),
+      deviceAddress: undefined
+    };
+  }
+
+  const [majorString, minorString] = parts;
+  const major = parseInt(majorString, 10);
+  const minor = parseInt(minorString, 10);
+
+  if (isNaN(major) || isNaN(minor)) {
+    return {
+      error: Error(`failed to parse major or minor number from content "${content}"`),
+      deviceAddress: undefined
+    };
+  }
+
+  return {
+    error: undefined,
+    deviceAddress: {
+      major,
+      minor
+    }
+  };
+};
+
+type TOpenBySysfsDevPathResult = {
+  error: Error;
+  fd: undefined;
+} | {
+  error: undefined;
+  fd: number;
+};
+
+const openBlockDeviceBySysfsDevPath = ({
+  sysfsDevPath,
+  flags
+}: {
+  sysfsDevPath: string;
+  flags: bigint;
+}): TOpenBySysfsDevPathResult => {
+  const { error: determineAddressError, deviceAddress } = determineMajorAndMinorFromSysfsDevPath({ sysfsDevPath });
+
+  if (determineAddressError !== undefined) {
+    return {
+      error: determineAddressError,
+      fd: undefined
+    };
+  }
+
+  return openBlockDevice({
+    major: deviceAddress.major,
+    minor: deviceAddress.minor,
+    flags
+  });
+};
+
+const openCharacterDeviceBySysfsDevPath = ({
+  sysfsDevPath,
+  flags
+}: {
+  sysfsDevPath: string;
+  flags: bigint;
+}): TOpenBySysfsDevPathResult => {
+  const { error: determineAddressError, deviceAddress } = determineMajorAndMinorFromSysfsDevPath({ sysfsDevPath });
+
+  if (determineAddressError !== undefined) {
+    return {
+      error: determineAddressError,
+      fd: undefined
+    };
+  }
+
+  return openCharacterDevice({
+    major: deviceAddress.major,
+    minor: deviceAddress.minor,
+    flags
+  });
+};
+
 export {
   openBlockDevice,
-  openCharacterDevice
+  openCharacterDevice,
+
+  openBlockDeviceBySysfsDevPath,
+  openCharacterDeviceBySysfsDevPath,
 };
